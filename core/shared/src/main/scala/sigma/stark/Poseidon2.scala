@@ -89,6 +89,44 @@ object Poseidon2 {
     multiplyByMInt(cells)
   }
 
+  /** Digest length in field elements. */
+  final val CellsOut: Int = 8
+
+  /** Sponge rate in field elements. */
+  final val CellsRate: Int = 16
+
+  /** Unpadded sponge hash — mirror of risc0-zkp `unpadded_hash`:
+    * overwrite-absorb `CellsRate` elements per block, permute, zero-pad the
+    * final partial block (also hashing an empty input as one zero block);
+    * digest is the first [[CellsOut]] cells. NOTE (as upstream documents):
+    * collision resistance holds only among equal-length inputs.
+    */
+  def unpaddedHash(input: Array[Int]): Array[Int] = {
+    val state = new Array[Int](Cells)
+    var unmixed = 0
+    var i = 0
+    while (i < input.length) {
+      state(unmixed) = input(i)
+      unmixed += 1
+      if (unmixed == CellsRate) { mix(state); unmixed = 0 }
+      i += 1
+    }
+    if (unmixed != 0 || input.length == 0) {
+      var j = unmixed
+      while (j < CellsRate) { state(j) = 0; j += 1 }
+      mix(state)
+    }
+    java.util.Arrays.copyOfRange(state, 0, CellsOut)
+  }
+
+  /** Merkle node compression — `unpadded_hash` of two 8-element digests
+    * (RISC0 `Poseidon2HashFn.hash_pair`).
+    */
+  def hashPair(a: Array[Int], b: Array[Int]): Array[Int] = {
+    require(a.length == CellsOut && b.length == CellsOut, "digests are 8 elements")
+    unpaddedHash(a ++ b)
+  }
+
   /** The raw sponge mixing function; permutes `cells` (length [[Cells]])
     * in place. Mirror of risc0-zkp `poseidon2_mix`.
     */

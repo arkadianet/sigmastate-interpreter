@@ -408,6 +408,27 @@ fn gen_profile(out: &Path) {
     write_json(out, "profile_descriptor.json", &kat);
 }
 
+/// Sponge-level KATs: `unpadded_hash` over assorted lengths (padding and
+/// multi-block behavior) — the primitive under RISC0 Merkle leaf/node
+/// hashing (`hash_pair` is `unpadded_hash` over the 16 concatenated digest
+/// elements).
+fn gen_poseidon2_hash(out: &Path) {
+    use risc0_zkp::core::hash::poseidon2::unpadded_hash;
+    let mut lcg = Lcg(0xE1900045_00000004);
+    let lengths = [0usize, 1, 8, 15, 16, 17, 24, 32, 33, 48];
+    let mut s = String::from("# input(comma elems, may be empty)\tdigest(8 elems)\n");
+    for &len in &lengths {
+        let input: Vec<BabyBearElem> =
+            (0..len).map(|_| BabyBearElem::new(lcg.next_fe())).collect();
+        let digest = unpadded_hash(input.iter());
+        let in_str = input.iter().map(|&e| u32_of(e).to_string()).collect::<Vec<_>>().join(",");
+        let out_str = digest.iter().map(|&e| u32_of(e).to_string()).collect::<Vec<_>>().join(",");
+        s.push_str(&format!("{in_str}\t{out_str}\n"));
+    }
+    fs::write(out.join("poseidon2_hash.tsv"), s).expect("write hash tsv");
+    println!("wrote poseidon2_hash.tsv");
+}
+
 /// Emit `Poseidon2Constants.scala` — the round constants and internal-matrix
 /// diagonal extracted DIRECTLY from risc0-zkp's public arrays (no manual
 /// transcription), as a generated Scala source with provenance header.
@@ -562,6 +583,7 @@ fn main() {
     gen_receipt(out);
     gen_profile(out);
     write_tsvs(out);
+    gen_poseidon2_hash(out);
     gen_poseidon2_constants_scala();
     println!("all KATs generated + oracle-confirmed");
 }

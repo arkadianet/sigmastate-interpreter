@@ -72,6 +72,24 @@ class StarkKatSpec extends AnyFunSuite with Matchers {
     }
   }
 
+  test("Poseidon2 unpadded sponge hash matches risc0-zkp vectors (incl. padding + multi-block)") {
+    val cases = lines("/stark-kats/poseidon2_hash.tsv")
+    cases should not be empty
+    cases.foreach { line =>
+      val f = line.split('\t')
+      val input = if (f(0).isEmpty) Array.empty[Int] else coeffs(f(0))
+      val expected = coeffs(f(1))
+      withClue(s"len=${input.length}: ") {
+        Poseidon2.unpaddedHash(input) shouldBe expected
+      }
+    }
+    // hash_pair is unpadded_hash over the concatenation — pin the equivalence
+    // on the 16-element vector (one full rate block).
+    val block = cases.map(_.split('\t')).find(f => !f(0).isEmpty && coeffs(f(0)).length == 16).get
+    val in16 = coeffs(block(0))
+    Poseidon2.hashPair(in16.take(8), in16.drop(8)) shouldBe coeffs(block(1))
+  }
+
   test("Ext4 field laws hold on vector inputs (assoc/distrib/inv roundtrip)") {
     // Structural sanity on top of parity: (a*b)*a == a*(b*a), a*inv(a) == 1.
     val cases = lines("/stark-kats/ext4_ops.tsv").take(20)
