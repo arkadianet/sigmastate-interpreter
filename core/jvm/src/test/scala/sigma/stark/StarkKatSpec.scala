@@ -56,6 +56,22 @@ class StarkKatSpec extends AnyFunSuite with Matchers {
     }
   }
 
+  test("Poseidon2 permutation matches risc0-zkp vectors (width 24)") {
+    val cases = lines("/stark-kats/poseidon2_perm.tsv")
+    cases should not be empty
+    cases.foreach { line =>
+      val f = line.split('\t')
+      val input = coeffs(f(0))
+      val expected = coeffs(f(1))
+      input.length shouldBe Poseidon2Constants.Cells
+      val cells = input.clone()
+      Poseidon2.mix(cells)
+      withClue(s"input=${f(0).take(40)}...: ") {
+        cells shouldBe expected
+      }
+    }
+  }
+
   test("Ext4 field laws hold on vector inputs (assoc/distrib/inv roundtrip)") {
     // Structural sanity on top of parity: (a*b)*a == a*(b*a), a*inv(a) == 1.
     val cases = lines("/stark-kats/ext4_ops.tsv").take(20)
