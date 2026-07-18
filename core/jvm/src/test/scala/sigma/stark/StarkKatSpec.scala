@@ -90,6 +90,25 @@ class StarkKatSpec extends AnyFunSuite with Matchers {
     Poseidon2.hashPair(in16.take(8), in16.drop(8)) shouldBe coeffs(block(1))
   }
 
+  test("Poseidon2Rng transcript replay matches risc0-zkp op-script vectors") {
+    val script = lines("/stark-kats/poseidon2_rng.tsv")
+    script should not be empty
+    val rng = new Poseidon2Rng
+    script.foreach { line =>
+      if (line.startsWith("mix:")) {
+        rng.mix(coeffs(line.stripPrefix("mix:")))
+      } else if (line.startsWith("elem -> ")) {
+        rng.randomElem() shouldBe line.stripPrefix("elem -> ").toInt
+      } else if (line.startsWith("bits:")) {
+        val Array(spec, expect) = line.stripPrefix("bits:").split(" -> ")
+        rng.randomBits(spec.trim.toInt) shouldBe expect.trim.toInt
+      } else if (line.startsWith("ext -> ")) {
+        val e = coeffs(line.stripPrefix("ext -> "))
+        rng.randomExtElem() shouldBe Ext4(e(0), e(1), e(2), e(3))
+      } else fail(s"unknown op line: $line")
+    }
+  }
+
   test("Ext4 field laws hold on vector inputs (assoc/distrib/inv roundtrip)") {
     // Structural sanity on top of parity: (a*b)*a == a*(b*a), a*inv(a) == 1.
     val cases = lines("/stark-kats/ext4_ops.tsv").take(20)

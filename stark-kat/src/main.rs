@@ -429,6 +429,70 @@ fn gen_poseidon2_hash(out: &Path) {
     println!("wrote poseidon2_hash.tsv");
 }
 
+/// Fiat-Shamir RNG KAT: a fixed op script driven through risc0-zkp's own
+/// `Poseidon2Rng` (the transcript RNG of the stock succinct profile),
+/// recording every output. Ops cross the rate boundary (>16 sequential
+/// draws), interleave re-mixing after squeezing, and exercise
+/// `random_bits`'s draw-4-keep-first-nonzero behavior and ext draws.
+fn gen_poseidon2_rng(out: &Path) {
+    use risc0_zkp::core::digest::Digest;
+    use risc0_zkp::core::hash::poseidon2::Poseidon2Rng;
+    use risc0_zkp::core::hash::Rng;
+
+    let mut lcg = Lcg(0xE1900045_00000005);
+    let mut rng = Poseidon2Rng::new();
+    let mut s = String::from(
+        "# op script + outputs. ops: mix:<8 comma words> | elem -> <v> | bits:<n> -> <v> | ext -> <4 comma>\n",
+    );
+
+    let mut mk_digest = |lcg: &mut Lcg| -> Digest {
+        let words: [u32; 8] = core::array::from_fn(|_| lcg.next_fe());
+        Digest::from(words)
+    };
+
+    // Script: mix, 20 elems (crosses rate), bits, mix (squeeze->mix path),
+    // ext, 3 elems, bits, mix, 17 elems.
+    let d0 = mk_digest(&mut lcg);
+    rng.mix(&d0);
+    s.push_str(&format!(
+        "mix:{}\n",
+        d0.as_words().iter().map(|w| w.to_string()).collect::<Vec<_>>().join(",")
+    ));
+    for _ in 0..20 {
+        s.push_str(&format!("elem -> {}\n", rng.random_elem().as_u32()));
+    }
+    for &b in &[8usize, 16, 27] {
+        s.push_str(&format!("bits:{b} -> {}\n", rng.random_bits(b)));
+    }
+    let d1 = mk_digest(&mut lcg);
+    rng.mix(&d1);
+    s.push_str(&format!(
+        "mix:{}\n",
+        d1.as_words().iter().map(|w| w.to_string()).collect::<Vec<_>>().join(",")
+    ));
+    let e = rng.random_ext_elem();
+    s.push_str(&format!(
+        "ext -> {}\n",
+        e.subelems().iter().map(|&x| u32_of(x).to_string()).collect::<Vec<_>>().join(",")
+    ));
+    for _ in 0..3 {
+        s.push_str(&format!("elem -> {}\n", rng.random_elem().as_u32()));
+    }
+    s.push_str(&format!("bits:{} -> {}\n", 11, rng.random_bits(11)));
+    let d2 = mk_digest(&mut lcg);
+    rng.mix(&d2);
+    s.push_str(&format!(
+        "mix:{}\n",
+        d2.as_words().iter().map(|w| w.to_string()).collect::<Vec<_>>().join(",")
+    ));
+    for _ in 0..17 {
+        s.push_str(&format!("elem -> {}\n", rng.random_elem().as_u32()));
+    }
+
+    fs::write(out.join("poseidon2_rng.tsv"), s).expect("write rng tsv");
+    println!("wrote poseidon2_rng.tsv");
+}
+
 /// Emit `Poseidon2Constants.scala` — the round constants and internal-matrix
 /// diagonal extracted DIRECTLY from risc0-zkp's public arrays (no manual
 /// transcription), as a generated Scala source with provenance header.
@@ -584,6 +648,7 @@ fn main() {
     gen_profile(out);
     write_tsvs(out);
     gen_poseidon2_hash(out);
+    gen_poseidon2_rng(out);
     gen_poseidon2_constants_scala();
     println!("all KATs generated + oracle-confirmed");
 }

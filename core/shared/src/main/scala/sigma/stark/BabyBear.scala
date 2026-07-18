@@ -53,4 +53,18 @@ object BabyBear {
     require(a != 0, "zero has no inverse")
     pow(a, P - 2L)
   }
+
+  /** risc0-core stores BabyBear elements in Montgomery form (`R = 2^32`);
+    * RISC0 digest WORDS are raw Montgomery residues (`Elem::new_raw` /
+    * `as_words`). These convert between that wire form and this
+    * implementation's canonical values at the digest boundary.
+    */
+  final val MontR: Int = ((1L << 32) % P).toInt
+  val MontRInv: Int = inv(MontR)
+
+  /** Canonical value of a raw (Montgomery) RISC0 digest word. */
+  def fromRaw(w: Int): Int = mul(w, MontRInv)
+
+  /** Raw (Montgomery) RISC0 digest word of a canonical value. */
+  def toRaw(x: Int): Int = mul(x, MontR)
 }
