@@ -1,0 +1,26 @@
+[package]
+name = "stark-kat"
+version = "0.1.0"
+edition = "2021"
+description = """
+Known Answer Test (KAT) generator for the EIP-0045 verifyStark JVM verifier.
+Every vector is produced by an EXTERNAL oracle (risc0-zkp / risc0-verifier,
+Apache-2.0) — never by the Scala implementation under test — per the
+oracle-parity rule. Output lands in
+core/jvm/src/test/resources/stark-kats/ for the Scala parity tests.
+"""
+
+[dependencies]
+# Receipt-level oracle: the same verifier crate (same tag) the Rust Ergo
+# node's verifyStark spike links, so receipt KATs match the running devnet.
+risc0-verifier = { git = "https://github.com/zkVerify/risc0-verifier", tag = "v0.11.0" }
+# Primitive-level oracle: RISC0's own field + Poseidon2 implementation.
+risc0-zkp = { version = "1.2", default-features = false }
+risc0-core = { version = "1.2" }
+bincode = "1.3"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+hex = "0.4"
+blake2 = "0.10"
+
+[workspace]
