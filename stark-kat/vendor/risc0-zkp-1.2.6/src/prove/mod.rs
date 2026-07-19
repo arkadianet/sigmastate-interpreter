@@ -22,7 +22,7 @@
 pub mod accum;
 pub mod adapter;
 pub mod executor;
-mod fri;
+pub mod fri; // PATCHED for stark-kat KAT generation: expose fri_prove
 pub mod merkle; // PATCHED for stark-kat KAT generation: expose MerkleTreeProver
 pub mod poly_group;
 pub mod prover;

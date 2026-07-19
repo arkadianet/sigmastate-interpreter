@@ -133,7 +133,7 @@ struct TapCache<F: Field> {
     check_mix_pows: Vec<F::ExtElem>,
 }
 
-pub(crate) struct Verifier<'a, F, C>
+pub struct Verifier<'a, F, C> // PATCHED for stark-kat KAT generation: was pub(crate) — expose the oracle fri_verify
 where
     F: Field,
 {
@@ -153,7 +153,7 @@ where
     F: Field,
     C: CircuitCoreDef<F>,
 {
-    fn new(circuit: &'a C, suite: &'a HashSuite<F>) -> Self {
+    pub fn new(circuit: &'a C, suite: &'a HashSuite<F>) -> Self { // PATCHED for stark-kat KAT generation: was private
         Self {
             circuit,
             suite,
