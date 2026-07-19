@@ -1,0 +1,19 @@
+{
+  "description": "Stock RISC0 succinct verifier profile descriptor (proposed vmType 0x01) + canonicalization proposal and profileHash.",
+  "canonicalization": "minified JSON, fixed key order as listed; Blake2b-256 over UTF-8",
+  "descriptor": {
+    "profile_id": 1,
+    "name": "risc0-succinct-v3.0-stock",
+    "zkvm": "RISC Zero (RISC-V CPU transition constraints)",
+    "circuit_version": "3.0",
+    "base_field": "BabyBear p=2013265921 (15*2^27+1)",
+    "extension_field": "degree-4, x^4 + 11, coeffs [c0,c1,c2,c3]",
+    "merkle_hash": "Poseidon2-BabyBear t=24 rate=16 out=8",
+    "transcript_hash": "SHA-256 (RISC0 succinct transcript)",
+    "proof_format": "bincode(InnerReceipt), succinct kind",
+    "public_input_format": "journal bytes; imageId = 32-byte Vk",
+    "security_note": "conjectured ~100-bit PQ soundness (stock parameters); registered as-is, hardened profiles may supersede"
+  },
+  "canonical_json": "{\"profile_id\":1,\"name\":\"risc0-succinct-v3.0-stock\",\"zkvm\":\"RISC Zero (RISC-V CPU transition constraints)\",\"circuit_version\":\"3.0\",\"base_field\":\"BabyBear p=2013265921 (15*2^27+1)\",\"extension_field\":\"degree-4, x^4 + 11, coeffs [c0,c1,c2,c3]\",\"merkle_hash\":\"Poseidon2-BabyBear t=24 rate=16 out=8\",\"transcript_hash\":\"SHA-256 (RISC0 succinct transcript)\",\"proof_format\":\"bincode(InnerReceipt), succinct kind\",\"public_input_format\":\"journal bytes; imageId = 32-byte Vk\",\"security_note\":\"conjectured ~100-bit PQ soundness (stock parameters); registered as-is, hardened profiles may supersede\"}",
+  "profile_hash_blake2b256": "45bab194f12f20446b8681732dd956886ddf09c7712b4c61ff606a527cc1953b"
+}
