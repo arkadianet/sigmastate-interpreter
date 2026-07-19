@@ -572,9 +572,9 @@ dependencies = [
 
 [[package]]
 name = "risc0-binfmt"
-version = "3.0.5"
+version = "3.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d836c6ad82f4ced7c61d5feedf905a17780312e393aa681d29cc0bbc5131672b"
+checksum = "1883f0c5d19b865f395209a137dcb29e56dc49951424967b8d0114c129f46e77"
 dependencies = [
  "anyhow",
  "borsh",
@@ -583,11 +583,26 @@ dependencies = [
  "elf",
  "lazy_static",
  "postcard",
- "risc0-zkp 3.0.5",
+ "risc0-zkp 3.0.4",
  "risc0-zkvm-platform 2.2.3",
  "ruint",
  "semver",
  "serde",
+ "tracing",
+]
+
+[[package]]
+name = "risc0-circuit-recursion"
+version = "4.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2347e909c6b2a65584b5898f3802eec5b8c1b4b45329edfdd8587b6a04dd3357"
+dependencies = [
+ "anyhow",
+ "bytemuck",
+ "hex",
+ "metal",
+ "risc0-core 3.0.2",
+ "risc0-zkp 3.0.4",
  "tracing",
 ]
 
@@ -627,18 +642,18 @@ dependencies = [
 
 [[package]]
 name = "risc0-circuit-rv32im"
-version = "4.0.5"
+version = "4.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cb11231aa4b74bcc0c8d16597893fbd7ea6f6a9ebbc35e16bfd06b467c7ee104"
+checksum = "61676419814a818fdb5e10066b13c5488b3f54aa9668794bd06c99bc91bff1f2"
 dependencies = [
  "anyhow",
  "bit-vec",
  "bytemuck",
  "derive_more",
  "paste",
- "risc0-binfmt 3.0.5",
+ "risc0-binfmt 3.0.4",
  "risc0-core 3.0.2",
- "risc0-zkp 3.0.5",
+ "risc0-zkp 3.0.4",
  "serde",
  "tracing",
 ]
@@ -686,13 +701,13 @@ dependencies = [
  "risc0-binfmt 1.2.6",
  "risc0-circuit-rv32im 1.2.6",
  "risc0-circuit-rv32im 3.0.1",
- "risc0-circuit-rv32im 4.0.5",
+ "risc0-circuit-rv32im 4.0.4",
  "risc0-core 1.2.6",
  "risc0-core 2.0.0",
  "risc0-core 3.0.2",
  "risc0-zkp 1.2.6",
  "risc0-zkp 2.0.3",
- "risc0-zkp 3.0.5",
+ "risc0-zkp 3.0.4",
  "serde",
 ]
 
@@ -747,9 +762,9 @@ dependencies = [
 
 [[package]]
 name = "risc0-zkp"
-version = "3.0.5"
+version = "3.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "21c0c921e5e2d44197940d387a45e29c6165e318b5a168fdfdbd50f50ba03678"
+checksum = "1f40d362a6c146ec6dc69208f539b92fd86e47b0dbc2083801423034a38155a2"
 dependencies = [
  "anyhow",
  "blake2",
@@ -916,9 +931,12 @@ dependencies = [
  "bincode",
  "blake2",
  "hex",
+ "risc0-binfmt 1.2.6",
+ "risc0-circuit-recursion",
  "risc0-core 1.2.6",
  "risc0-verifier",
  "risc0-zkp 1.2.6",
+ "risc0-zkp 3.0.4",
  "serde",
  "serde_json",
 ]

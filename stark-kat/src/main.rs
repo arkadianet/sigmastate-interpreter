@@ -35,7 +35,10 @@ const FIXTURES: &str = "fixtures";
 struct Lcg(u64);
 impl Lcg {
     fn next_u32(&mut self) -> u32 {
-        self.0 = self.0.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+        self.0 = self
+            .0
+            .wrapping_mul(6364136223846793005)
+            .wrapping_add(1442695040888963407);
         (self.0 >> 32) as u32
     }
     fn next_fe(&mut self) -> u32 {
@@ -92,13 +95,18 @@ fn gen_babybear(out: &Path) {
                 sub: u32_of(ea - eb),
                 mul: u32_of(ea * eb),
                 neg_a: u32_of(-ea),
-                inv_a: if a % P == 0 { None } else { Some(u32_of(ea.inv())) },
+                inv_a: if a % P == 0 {
+                    None
+                } else {
+                    Some(u32_of(ea.inv()))
+                },
                 pow_a_b: u32_of(ea.pow(b as usize)),
             }
         })
         .collect();
     let kat = BabyBearKat {
-        description: "BabyBear base-field ops; p = 15*2^27+1 = 2013265921. Oracle: risc0-core 1.2.6.",
+        description:
+            "BabyBear base-field ops; p = 15*2^27+1 = 2013265921. Oracle: risc0-core 1.2.6.",
         modulus: P,
         oracle: "risc0-core 1.2.6 field::baby_bear::Elem",
         cases,
@@ -217,7 +225,8 @@ fn gen_poseidon2(out: &Path) {
         })
         .collect();
     let kat = PoseidonKat {
-        description: "Poseidon2-BabyBear width-24 full permutation (poseidon2_mix). Oracle: risc0-zkp 1.2.6.",
+        description:
+            "Poseidon2-BabyBear width-24 full permutation (poseidon2_mix). Oracle: risc0-zkp 1.2.6.",
         width: CELLS,
         oracle: "risc0-zkp 1.2.6 core::hash::poseidon2::poseidon2_mix",
         cases,
@@ -310,7 +319,13 @@ fn gen_receipt(out: &Path) {
         });
     };
 
-    push_mutation("flip low bit of first proof byte".into(), Some(0), Some(0x01), None, false);
+    push_mutation(
+        "flip low bit of first proof byte".into(),
+        Some(0),
+        Some(0x01),
+        None,
+        false,
+    );
     push_mutation(
         format!("flip a byte mid-proof (offset {})", proof.len() / 2),
         Some(proof.len() / 2),
@@ -325,9 +340,27 @@ fn gen_receipt(out: &Path) {
         None,
         false,
     );
-    push_mutation("truncate proof to 1024 bytes".into(), None, None, Some(1024), false);
-    push_mutation("truncate proof to 0 bytes".into(), None, None, Some(0), false);
-    push_mutation("wrong image id (flip low bit of byte 0)".into(), None, None, None, true);
+    push_mutation(
+        "truncate proof to 1024 bytes".into(),
+        None,
+        None,
+        Some(1024),
+        false,
+    );
+    push_mutation(
+        "truncate proof to 0 bytes".into(),
+        None,
+        None,
+        Some(0),
+        false,
+    );
+    push_mutation(
+        "wrong image id (flip low bit of byte 0)".into(),
+        None,
+        None,
+        None,
+        true,
+    );
 
     let kat = ReceiptKat {
         description: "End-to-end RISC0 succinct receipt accept/reject vectors. The accept \
@@ -418,11 +451,18 @@ fn gen_poseidon2_hash(out: &Path) {
     let lengths = [0usize, 1, 8, 15, 16, 17, 24, 32, 33, 48];
     let mut s = String::from("# input(comma elems, may be empty)\tdigest(8 elems)\n");
     for &len in &lengths {
-        let input: Vec<BabyBearElem> =
-            (0..len).map(|_| BabyBearElem::new(lcg.next_fe())).collect();
+        let input: Vec<BabyBearElem> = (0..len).map(|_| BabyBearElem::new(lcg.next_fe())).collect();
         let digest = unpadded_hash(input.iter());
-        let in_str = input.iter().map(|&e| u32_of(e).to_string()).collect::<Vec<_>>().join(",");
-        let out_str = digest.iter().map(|&e| u32_of(e).to_string()).collect::<Vec<_>>().join(",");
+        let in_str = input
+            .iter()
+            .map(|&e| u32_of(e).to_string())
+            .collect::<Vec<_>>()
+            .join(",");
+        let out_str = digest
+            .iter()
+            .map(|&e| u32_of(e).to_string())
+            .collect::<Vec<_>>()
+            .join(",");
         s.push_str(&format!("{in_str}\t{out_str}\n"));
     }
     fs::write(out.join("poseidon2_hash.tsv"), s).expect("write hash tsv");
@@ -445,7 +485,7 @@ fn gen_poseidon2_rng(out: &Path) {
         "# op script + outputs. ops: mix:<8 comma words> | elem -> <v> | bits:<n> -> <v> | ext -> <4 comma>\n",
     );
 
-    let mut mk_digest = |lcg: &mut Lcg| -> Digest {
+    let mk_digest = |lcg: &mut Lcg| -> Digest {
         let words: [u32; 8] = core::array::from_fn(|_| lcg.next_fe());
         Digest::from(words)
     };
@@ -456,7 +496,11 @@ fn gen_poseidon2_rng(out: &Path) {
     rng.mix(&d0);
     s.push_str(&format!(
         "mix:{}\n",
-        d0.as_words().iter().map(|w| w.to_string()).collect::<Vec<_>>().join(",")
+        d0.as_words()
+            .iter()
+            .map(|w| w.to_string())
+            .collect::<Vec<_>>()
+            .join(",")
     ));
     for _ in 0..20 {
         s.push_str(&format!("elem -> {}\n", rng.random_elem().as_u32()));
@@ -468,12 +512,20 @@ fn gen_poseidon2_rng(out: &Path) {
     rng.mix(&d1);
     s.push_str(&format!(
         "mix:{}\n",
-        d1.as_words().iter().map(|w| w.to_string()).collect::<Vec<_>>().join(",")
+        d1.as_words()
+            .iter()
+            .map(|w| w.to_string())
+            .collect::<Vec<_>>()
+            .join(",")
     ));
     let e = rng.random_ext_elem();
     s.push_str(&format!(
         "ext -> {}\n",
-        e.subelems().iter().map(|&x| u32_of(x).to_string()).collect::<Vec<_>>().join(",")
+        e.subelems()
+            .iter()
+            .map(|&x| u32_of(x).to_string())
+            .collect::<Vec<_>>()
+            .join(",")
     ));
     for _ in 0..3 {
         s.push_str(&format!("elem -> {}\n", rng.random_elem().as_u32()));
@@ -483,7 +535,11 @@ fn gen_poseidon2_rng(out: &Path) {
     rng.mix(&d2);
     s.push_str(&format!(
         "mix:{}\n",
-        d2.as_words().iter().map(|w| w.to_string()).collect::<Vec<_>>().join(",")
+        d2.as_words()
+            .iter()
+            .map(|w| w.to_string())
+            .collect::<Vec<_>>()
+            .join(",")
     ));
     for _ in 0..17 {
         s.push_str(&format!("elem -> {}\n", rng.random_elem().as_u32()));
@@ -561,7 +617,11 @@ fn write_tsvs(out: &Path) {
         let mut s = String::from("# a\tb\tadd\tsub\tmul\tneg_a\tinv_a\tpow_a_b\n");
         for (a, b) in inputs {
             let (ea, eb) = (BabyBearElem::new(a), BabyBearElem::new(b));
-            let inv = if a % P == 0 { "-".to_string() } else { u32_of(ea.inv()).to_string() };
+            let inv = if a % P == 0 {
+                "-".to_string()
+            } else {
+                u32_of(ea.inv()).to_string()
+            };
             s.push_str(&format!(
                 "{a}\t{b}\t{}\t{}\t{}\t{}\t{inv}\t{}\n",
                 u32_of(ea + eb),
@@ -587,12 +647,21 @@ fn write_tsvs(out: &Path) {
             let b = [lcg.next_fe(), lcg.next_fe(), lcg.next_fe(), lcg.next_fe()];
             inputs.push((a, b));
         }
-        let j = |c: [u32; 4]| c.iter().map(|v| v.to_string()).collect::<Vec<_>>().join(",");
+        let j = |c: [u32; 4]| {
+            c.iter()
+                .map(|v| v.to_string())
+                .collect::<Vec<_>>()
+                .join(",")
+        };
         let mut s = String::from("# a\tb\tadd\tmul\tinv_a  (coeffs c0,c1,c2,c3)\n");
         for (a, b) in inputs {
             let (ea, eb) = (ext_of(a), ext_of(b));
             let zero = a.iter().all(|&c| c % P == 0);
-            let inv = if zero { "-".to_string() } else { j(arr_of(ea.inv())) };
+            let inv = if zero {
+                "-".to_string()
+            } else {
+                j(arr_of(ea.inv()))
+            };
             s.push_str(&format!(
                 "{}\t{}\t{}\t{}\t{inv}\n",
                 j(a),
@@ -617,7 +686,12 @@ fn write_tsvs(out: &Path) {
         for _ in 0..13 {
             inputs.push((0..CELLS).map(|_| lcg.next_fe()).collect());
         }
-        let j = |c: &[u32]| c.iter().map(|v| v.to_string()).collect::<Vec<_>>().join(",");
+        let j = |c: &[u32]| {
+            c.iter()
+                .map(|v| v.to_string())
+                .collect::<Vec<_>>()
+                .join(",")
+        };
         let mut s = String::from("# input(24)\toutput(24)\n");
         for input in inputs {
             let mut cells: [BabyBearElem; CELLS] =

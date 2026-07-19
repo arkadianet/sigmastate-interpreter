@@ -2,6 +2,9 @@
 name = "stark-kat"
 version = "0.1.0"
 edition = "2021"
+# Keep `cargo run --release` (per README) pointing at the original generator;
+# the circuit_extract / transcript_capture bins are invoked with `--bin`.
+default-run = "stark-kat"
 description = """
 Known Answer Test (KAT) generator for the EIP-0045 verifyStark JVM verifier.
 Every vector is produced by an EXTERNAL oracle (risc0-zkp / risc0-verifier,
@@ -17,6 +20,19 @@ risc0-verifier = { git = "https://github.com/zkVerify/risc0-verifier", tag = "v0
 # Primitive-level oracle: RISC0's own field + Poseidon2 implementation.
 risc0-zkp = { version = "1.2", default-features = false }
 risc0-core = { version = "1.2" }
+# Succinct-path oracles (circuit tables + full-verification transcript).
+# Pinned to EXACTLY the versions the Rust Ergo node's Cargo.lock resolves for
+# risc0-verifier v0.11.0 (risc0-zkp 3.0.4 / risc0-circuit-recursion 4.0.4) —
+# the devnet verifies with that resolution. zkVerify's checkout ships no
+# lockfile (its manifest asks for ^3.0.0), so the devnet lock is the pin;
+# this `=3.0.4` also unifies risc0-verifier's own risc0-zkp-v3 dep to 3.0.4.
+# `unstable` exposes risc0_zkp::verify::Verifier so transcript_capture can
+# replicate the verify() driver step-by-step and interleave checkpoints.
+risc0-zkp-v3 = { package = "risc0-zkp", version = "=3.0.4", default-features = false, features = ["std", "unstable"] }
+risc0-circuit-recursion = { version = "=4.0.4", default-features = false }
+# read_sha_halfs oracle for the seal output-slot -> claim-digest binding
+# (same 1.2.6 the verifier crate itself links).
+risc0-binfmt = { version = "=1.2.6", default-features = false }
 bincode = "1.3"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

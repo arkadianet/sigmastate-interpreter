@@ -13,6 +13,14 @@ oracle — never by the Scala implementation under test:
 | `poseidon2_perm.*` | risc0-zkp 1.2.6 (`core::hash::poseidon2::poseidon2_mix`) |
 | `receipt_kat.json` + `proof_inner.bin` | risc0-verifier v0.11.0 (zkVerify, Apache-2.0), `verify(&v3_0(), …)` — the same crate/tag the Rust Ergo node's verifyStark implementation links |
 | `profile_descriptor.json` | proposal artifact (canonicalization + Blake2b-256 profileHash for a stock RISC0 succinct vmType) |
+| `circuit_taps.tsv`, `circuit_polyext_ops.tsv`, `circuit_params.tsv` | risc0-circuit-recursion 4.0.4 (`CIRCUIT.get_taps()`, vendored `poly_ext.rs` DEF asserted equivalent to the crate's private table, `control_id`) + risc0-zkp 3.0.4 consts — `cargo run --release --bin circuit_extract` |
+| `transcript_capture.tsv` | risc0-zkp 3.0.4 `verify::verify` over the REAL receipt with delegating recording `HashFn`/`Rng` wrappers (untouched verifier accepts through the identical path, asserted) — `cargo run --release --bin transcript_capture` |
+
+Schemas for the `circuit_*`/`transcript_*` files:
+`core/jvm/src/test/resources/stark-kats/circuit_tables.md`. The risc0 3.x /
+recursion 4.x deps are pinned to exactly what the Rust Ergo node's
+`Cargo.lock` resolves for risc0-verifier v0.11.0 (zkp 3.0.4 / recursion
+4.0.4) — the devnet verifies with that resolution.
 
 The accept receipt in `fixtures/` is a REAL proof (sha256 guest) generated
 by the RISC0 prover and carried in a transaction on a live Ergo Rust-node
