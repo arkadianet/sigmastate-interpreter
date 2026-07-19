@@ -11,6 +11,8 @@ oracle — never by the Scala implementation under test:
 |---|---|
 | `babybear_ops.*`, `ext4_ops.*` | risc0-core 1.2.6 (`field::baby_bear`) |
 | `poseidon2_perm.*` | risc0-zkp 1.2.6 (`core::hash::poseidon2::poseidon2_mix`) |
+| `poseidon2_hash.tsv`, `poseidon2_rng.tsv` | risc0-zkp 1.2.6 (`unpadded_hash`, `Poseidon2Rng`) |
+| `readiop_script.tsv`, `merkle_kat.tsv` | risc0-zkp 1.2.6 prover + verifier (`WriteIOP`/`MerkleTreeProver` build the streams; every vector — positive and negative — is replayed through risc0-zkp's own `ReadIOP`/`MerkleTreeVerifier` before being written), via `src/bin/merkle_iop_kat.rs` |
 | `receipt_kat.json` + `proof_inner.bin` | risc0-verifier v0.11.0 (zkVerify, Apache-2.0), `verify(&v3_0(), …)` — the same crate/tag the Rust Ergo node's verifyStark implementation links |
 | `profile_descriptor.json` | proposal artifact (canonicalization + Blake2b-256 profileHash for a stock RISC0 succinct vmType) |
 | `circuit_taps.tsv`, `circuit_polyext_ops.tsv`, `circuit_params.tsv` | risc0-circuit-recursion 4.0.4 (`CIRCUIT.get_taps()`, vendored `poly_ext.rs` DEF asserted equivalent to the crate's private table, `control_id`) + risc0-zkp 3.0.4 consts — `cargo run --release --bin circuit_extract` |
@@ -41,3 +43,12 @@ These vectors target the **stock RISC0 succinct profile**
 emit today. They complement sigmastate PR #1116 (draft verifier for the
 PQ-hardened Poseidon1/Ext16 profile), for which no prover — and therefore
 no real-proof KAT — currently exists.
+
+`vendor/risc0-zkp-1.2.6/` is a verbatim copy of the crates.io source with a
+3-line **visibility-only** patch (grep `PATCHED`): upstream keeps
+`prove::merkle::MerkleTreeProver` and `verify::MerkleTreeVerifier`
+crate-private, but the merkle/IOP generator must drive the real prover and
+oracle-confirm through the real verifier. Wired in via `[patch.crates-io]`;
+no behavioral change.
+cd stark-kat && cargo run --release            # field/poseidon2/receipt vectors
+cd stark-kat && cargo run --release --bin merkle_iop_kat   # ReadIOP + Merkle vectors

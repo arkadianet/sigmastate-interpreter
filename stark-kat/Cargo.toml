@@ -18,7 +18,9 @@ core/jvm/src/test/resources/stark-kats/ for the Scala parity tests.
 # node's verifyStark spike links, so receipt KATs match the running devnet.
 risc0-verifier = { git = "https://github.com/zkVerify/risc0-verifier", tag = "v0.11.0" }
 # Primitive-level oracle: RISC0's own field + Poseidon2 implementation.
-risc0-zkp = { version = "1.2", default-features = false }
+# "prove" enables the prover side (MerkleTreeProver / WriteIOP / CpuHal) used
+# by the merkle_iop_kat generator to build real trees and IOP streams.
+risc0-zkp = { version = "1.2", features = ["prove"] }
 risc0-core = { version = "1.2" }
 # Succinct-path oracles (circuit tables + full-verification transcript).
 # Pinned to EXACTLY the versions the Rust Ergo node's Cargo.lock resolves for
@@ -40,3 +42,13 @@ hex = "0.4"
 blake2 = "0.10"
 
 [workspace]
+
+# Verbatim copy of risc0-zkp 1.2.6 (crates.io) with a 3-line visibility patch
+# (grep for "PATCHED"): `prove::merkle` and `verify::MerkleTreeVerifier` are
+# crate-private upstream, but the merkle_iop_kat generator must drive the real
+# MerkleTreeProver AND oracle-confirm every vector through the real
+# MerkleTreeVerifier. No behavioral change — visibility only. Version-scoped:
+# only the 1.2.x resolution is replaced; the =3.0.4 pin still comes from
+# crates.io.
+[patch.crates-io]
+risc0-zkp = { path = "vendor/risc0-zkp-1.2.6" }
